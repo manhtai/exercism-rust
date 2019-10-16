@@ -4,5 +4,6 @@ members = [
     "hello-world",
     "reverse-string",
     "gigasecond",
-    "clock"
+    "clock",
+    "atbash-cipher",
 ]
