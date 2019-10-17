@@ -10,7 +10,10 @@ impl Clock {
     pub fn new(hours: i32, minutes: i32) -> Self {
         let m = minutes.rem_euclid(60);
         let h = (minutes.div_euclid(60) + hours).rem_euclid(24);
-        Clock { hours: h, minutes: m }
+        Clock {
+            hours: h,
+            minutes: m,
+        }
     }
 
     pub fn add_minutes(&self, minutes: i32) -> Self {
