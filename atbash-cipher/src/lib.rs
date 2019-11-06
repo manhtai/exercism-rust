@@ -1,40 +1,29 @@
-const ALPHABET: &str = "abcdefghijklmnopqrstuvwxyz";
-const CIPHER: &str = "zyxwvutsrqponmlkjihgfedcba";
-
 /// "Encipher" with the Atbash cipher.
 pub fn encode(plain: &str) -> String {
-    let mut cipher = "".to_owned();
-    let mut count = 0;
-    for c in plain.chars() {
-        if count == 5 {
-            cipher.push_str(" ");
-            count = 0;
-        }
-
-        let c_lower = c.to_ascii_lowercase();
-        if c_lower >= 'a' && c_lower <= 'z' {
-            let range = (c_lower as u8 - b'a') as usize;
-            cipher.push_str(&CIPHER[range..range + 1]);
+    let mut count = 1;
+    plain.chars().map(|c| { c.to_ascii_lowercase() }).map(|c_lower| {
+        let sep = if count % 5 == 0 { " " } else { "" };
+        return if c_lower >= 'a' && c_lower <= 'z' {
             count += 1;
+            char::from(b'z' - c_lower as u8 + b'a').to_string() + sep
         } else if c_lower >= '0' && c_lower <= '9' {
-            cipher.push_str(&c_lower.to_string());
             count += 1;
-        }
-    }
-    cipher.trim().to_owned()
+            c_lower.to_string() + sep
+        } else {
+            "".to_owned()
+        };
+    }).collect::<String>().trim().to_string()
 }
 
 /// "Decipher" with the Atbash cipher.
 pub fn decode(cipher: &str) -> String {
-    let mut plain = "".to_owned();
-    for c in cipher.chars() {
-        let c_lower = c.to_ascii_lowercase();
-        if c_lower >= 'a' && c_lower <= 'z' {
-            let range = (b'z' - c_lower as u8) as usize;
-            plain.push_str(&ALPHABET[range..range + 1]);
+    cipher.chars().map(|c| { c.to_ascii_lowercase() }).map(|c_lower| {
+        return if c_lower >= 'a' && c_lower <= 'z' {
+            char::from(b'a' + b'z' - c_lower as u8).to_string()
         } else if c_lower > '0' && c_lower <= '9' {
-            plain.push_str(&c_lower.to_string());
-        }
-    }
-    plain
+            c_lower.to_string()
+        } else {
+            "".to_owned()
+        };
+    }).collect()
 }
