@@ -14,7 +14,7 @@ pub fn encode(plain: &str) -> String {
     plain.chars()
         .filter_map(translate)
         .enumerate()
-        .flat_map(|(i, item)| if i > 0 && i % 5 == 0 { Some(' ') } else { None }.into_iter().chain(Some(item).into_iter()))
+        .flat_map(|(i, item)| if i > 0 && i % 5 == 0 { Some(' ') } else { None }.into_iter().chain(std::iter::once(item)))
         .collect()
 }
 
