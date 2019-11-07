@@ -13,11 +13,9 @@ fn translate(c: char) -> Option<char> {
 pub fn encode(plain: &str) -> String {
     plain.chars()
         .filter_map(translate)
-        .collect::<Vec<char>>()
-        .chunks(5)
-        .map(|c| c.iter().collect::<String>())
-        .collect::<Vec<String>>()
-        .join(" ")
+        .enumerate()
+        .flat_map(|(i, item)| if i > 0 && i % 5 == 0 { Some(' ') } else { None }.into_iter().chain(Some(item).into_iter()))
+        .collect()
 }
 
 /// "Decipher" with the Atbash cipher.
