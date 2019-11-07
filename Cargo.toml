@@ -6,4 +6,5 @@ members = [
     "gigasecond",
     "clock",
     "atbash-cipher",
+    "anagram",
 ]
