@@ -7,4 +7,5 @@ members = [
     "clock",
     "atbash-cipher",
     "anagram",
+    "space-age",
 ]
