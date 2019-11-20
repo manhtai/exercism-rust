@@ -1,20 +1,21 @@
 use std::collections::HashSet;
 
-fn sort_word(word: &str) -> String {
+fn sort_word(word: &String) -> Vec<char> {
     let mut new_word = word
-        .to_lowercase()
-        .to_string()
         .chars()
         .collect::<Vec<char>>();
     new_word.sort();
-    return new_word.iter().collect();
+    new_word
 }
 
 pub fn anagrams_for<'a>(word: &str, possible_anagrams: &[&'a str]) -> HashSet<&'a str> {
     let lowercase_word = word.to_lowercase();
-    let sorted_word = sort_word(word);
-    return possible_anagrams.iter()
-        .filter(|c| c.to_lowercase() != lowercase_word && sort_word(c) == sorted_word)
+    let sorted_word = sort_word(&lowercase_word);
+    possible_anagrams.iter()
+        .filter(|c| {
+            let c_lower = c.to_lowercase();
+            c_lower != lowercase_word && sort_word(&c_lower) == sorted_word
+        })
         .cloned()
-        .collect();
+        .collect()
 }
