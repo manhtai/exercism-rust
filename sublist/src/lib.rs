@@ -15,8 +15,9 @@ pub fn sublist<T: PartialEq>(_first_list: &[T], _second_list: &[T]) -> Compariso
         (_second_list, _first_list, -1)
     };
 
-    let mut is_sub = true;
+    let mut is_sub = false;
     'outer: for i in 0..(larger_list.len() - smaller_list.len() + 1) {
+        is_sub = true;
         'inner: for j in 0..smaller_list.len() {
             if larger_list[i+j] != smaller_list[j] {
                 is_sub = false;
