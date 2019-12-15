@@ -1,6 +1,7 @@
 pub fn annotate(minefield: &[&str]) -> Vec<String> {
     let list: Vec<Vec<char>> = minefield.iter().map(|x| x.chars().collect()).collect();
     let mut result: Vec<Vec<u8>> = vec![vec![0; list[0].len()]; list.len()];
+
     for (i, row) in list.iter().enumerate() {
         for (j, c) in row.iter().enumerate() {
             if c.to_owned() == '*' {
@@ -17,9 +18,10 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
 
     result.iter().enumerate().map(|(i, row)| {
         row.iter().enumerate().map(|(j, c)| {
-            match list[i][j].to_owned() {
-                '*' => "*".to_owned(),
-                _ => if *c != 0 { c.to_string() } else { " ".to_owned() },
+            match (list[i][j].to_owned(), c) {
+                ('*', _) => "*".to_owned(),
+                (_, 0) => " ".to_owned(),
+                (_, _) => c.to_string(),
             }
         }).collect()
     }).collect()
