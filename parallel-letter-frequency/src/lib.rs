@@ -31,7 +31,7 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
         c
     };
 
-
+    // Spawn workers to do work
     for i in 0..running_worker {
         let clone_v = concurrent_vec.clone();
         let string = input[i * each_worker_load..cmp::min((i + 1) * each_worker_load, str_len)]
