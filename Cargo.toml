@@ -11,4 +11,5 @@ members = [
     "sublist",
     "minesweeper",
     "luhn",
+    "parallel-letter-frequency",
 ]
