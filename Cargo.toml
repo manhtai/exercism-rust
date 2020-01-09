@@ -12,4 +12,5 @@ members = [
     "minesweeper",
     "luhn",
     "parallel-letter-frequency",
+    "macros",
 ]
