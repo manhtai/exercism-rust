@@ -1,16 +1,17 @@
+use std::cmp;
 use std::collections::HashMap;
 use std::thread;
-use std::sync::{Arc, Mutex};
-use std::cmp;
-
 
 pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
     // Init concurrent vec
-    let concurrent_vec = Arc::new(Mutex::new(vec![]));
     let mut children = vec![];
 
     // Calculate each worker load
     let str_len = input.len();
+    if str_len == 0 {
+        return HashMap::new();
+    }
+
     let running_worker = cmp::min(str_len, worker_count);
     let each_worker_load = str_len.div_euclid(running_worker);
 
@@ -33,25 +34,21 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
 
     // Spawn workers to do work
     for i in 0..running_worker {
-        let clone_v = concurrent_vec.clone();
-        let string = input[i * each_worker_load..cmp::min((i + 1) * each_worker_load, str_len)]
-            .join("");
+        let string =
+            input[i * each_worker_load..cmp::min((i + 1) * each_worker_load, str_len)].join("");
 
         children.push(thread::spawn(move || {
-            let h = string.chars()
+            string
+                .chars()
                 .filter(|c| c.is_alphabetic())
                 .map(char_to_map)
-                .fold(HashMap::new(), fold_map);
-            clone_v.lock().unwrap().push(h);
+                .fold(HashMap::new(), fold_map)
         }));
-    };
+    }
 
     // Wait for all workers finish
-    for child in children {
-        let _ = child.join();
-    };
-
-    // Calculate final result
-    let cv = concurrent_vec.lock().unwrap().clone();
-    cv.into_iter().fold(HashMap::new(), fold_map)
+    children
+        .into_iter()
+        .map(|c| c.join().unwrap())
+        .fold(HashMap::new(), fold_map)
 }
