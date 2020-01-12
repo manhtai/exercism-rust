@@ -13,4 +13,5 @@ members = [
     "luhn",
     "parallel-letter-frequency",
     "macros",
+    "poker",
 ]
