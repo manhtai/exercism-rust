@@ -1,4 +1,4 @@
-use std::cmp::{Ordering, Reverse};
+use std::cmp::{Ordering};
 use std::collections::{HashMap, HashSet};
 
 /// Given a list of poker hands, return a list of those hands which win.
@@ -81,7 +81,6 @@ fn get_hand_rank(hand: &str) -> Hand {
 
     let mut counts = vec![];
     let mut ranks = vec![];
-    let mut cmp_ranks = vec![];
 
     let mut groups = groups.into_iter().collect::<Vec<(usize, i32)>>();
     groups.sort_by(|(r1, c1), (r2, c2)| {
@@ -93,12 +92,10 @@ fn get_hand_rank(hand: &str) -> Hand {
 
     for (rank, count) in groups {
         ranks.push(rank);
-        cmp_ranks.push(rank);
         counts.push(count);
     }
-    cmp_ranks.sort_by_key(|a| Reverse(*a));
 
-    if cmp_ranks.eq(&vec![14, 5, 4, 3, 2]) {
+    if ranks.eq(&vec![14, 5, 4, 3, 2]) {
         ranks = vec![5, 4, 3, 2, 1]
     };
 
