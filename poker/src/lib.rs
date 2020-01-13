@@ -1,4 +1,4 @@
-use std::cmp::Reverse;
+use std::cmp::{Ordering, Reverse};
 use std::collections::{HashMap, HashSet};
 
 /// Given a list of poker hands, return a list of those hands which win.
@@ -6,35 +6,49 @@ use std::collections::{HashMap, HashSet};
 /// Note the type signature: this function should return _the same_ reference to
 /// the winning hand(s) as were passed in, not reconstructed strings which happen to be equal.
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Option<Vec<&'a str>> {
-    find_all_winning_hands(hands)
-}
-
-fn find_all_winning_hands<'a>(hands: &[&'a str]) -> Option<Vec<&'a str>> {
-    let (mut max_point, mut max_rank) = (0, vec![]);
+    let mut max_hand = Hand { order: 0, ranks: vec![0] };
     let mut result = vec![];
 
-    for &hand in hands {
-        let (point, rank) = get_hand_rank(hand);
-        let lt = if point > max_point {
-            true
-        } else if point == max_point {
-            rank.gt(&max_rank)
-        } else {
-            false
-        };
+    for &hand_str in hands {
+        let hand = get_hand_rank(hand_str);
 
-        let eq = point == max_point && rank.eq(&max_rank);
-
-        if result.is_empty() || lt {
-            result = vec![hand];
-            max_point = point;
-            max_rank = rank;
-        } else if eq {
-            result.push(hand);
+        if result.is_empty() || hand > max_hand {
+            result = vec![hand_str];
+            max_hand = hand;
+        } else if max_hand == hand {
+            result.push(hand_str);
         }
     }
 
     return Some(result);
+}
+
+#[derive(Eq)]
+struct Hand {
+    order: i32,
+    ranks: Vec<usize>,
+}
+
+
+impl Ord for Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.order.cmp(&other.order) {
+            Ordering::Equal => self.ranks.cmp(&other.ranks),
+            neq => neq,
+        }
+    }
+}
+
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl PartialEq for Hand {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(&other).eq(&Ordering::Equal)
+    }
 }
 
 fn to_number(h: &str) -> usize {
@@ -55,41 +69,44 @@ fn find_hand(h: &str) -> (&str, usize) {
     }
 }
 
-fn get_hand_rank(hand: &str) -> (i32, Vec<usize>) {
+fn get_hand_rank(hand: &str) -> Hand {
     let mut groups = HashMap::new();
-    let keys = hand
-        .split_whitespace()
-        .map(|s| {
-            let (key, rank) = find_hand(s);
-            (*groups.entry(rank).or_insert(0)) += 1;
-            key
-        })
-        .collect::<HashSet<&str>>();
+    let mut keys = HashSet::new();
 
-    let mut hands_vec = groups.iter().collect::<Vec<(&usize, &i32)>>();
-    hands_vec.sort();
+    for s in hand.split_whitespace() {
+        let (key, rank) = find_hand(s);
+        (*groups.entry(rank).or_insert(0)) += 1;
+        keys.insert(key);
+    }
 
-    let counts = hands_vec
-        .iter()
-        .map(|(_, count)| **count)
-        .collect::<Vec<i32>>();
+    let mut counts = vec![];
+    let mut ranks = vec![];
+    let mut cmp_ranks = vec![];
 
-    let mut ranks = hands_vec
-        .iter()
-        .map(|(rank, _)| **rank)
-        .collect::<Vec<usize>>();
+    let mut groups = groups.into_iter().collect::<Vec<(usize, i32)>>();
+    groups.sort_by(|(r1, c1), (r2, c2)| {
+        match c1.cmp(c2) {
+            Ordering::Equal => r2.cmp(r1),
+            neq => neq.reverse(),
+        }
+    });
 
-    ranks = if ranks.eq(&vec![14, 5, 4, 3, 2]) {
-        vec![5, 4, 3, 2, 1]
-    } else {
-        ranks
+    for (rank, count) in groups {
+        ranks.push(rank);
+        cmp_ranks.push(rank);
+        counts.push(count);
+    }
+    cmp_ranks.sort_by_key(|a| Reverse(*a));
+
+    if cmp_ranks.eq(&vec![14, 5, 4, 3, 2]) {
+        ranks = vec![5, 4, 3, 2, 1]
     };
 
-    let straight =
-        ranks.len() == 5 && (ranks.iter().max().unwrap() - ranks.iter().min().unwrap()) == 4;
+    let longest_path = ranks.iter().max().unwrap() - ranks.iter().min().unwrap();
+    let straight = ranks.len() == 5 && longest_path == 4;
     let flush = keys.len() == 1;
 
-    let sort = if counts.eq(&vec![5]) {
+    let order = if counts.eq(&vec![5]) {
         9
     } else if straight & flush {
         8
@@ -111,5 +128,5 @@ fn get_hand_rank(hand: &str) -> (i32, Vec<usize>) {
         0
     };
 
-    (sort, ranks)
+    Hand { order, ranks }
 }
