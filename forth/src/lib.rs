@@ -1,4 +1,4 @@
-use crate::Error::{UnknownWord, InvalidWord};
+use crate::Error::{UnknownWord, InvalidWord, StackUnderflow, DivisionByZero};
 
 pub type Value = i32;
 pub type ForthResult = Result<(), Error>;
@@ -28,61 +28,67 @@ impl Forth {
         let result = input.split_whitespace().map(|ops| {
             if ops.chars().all(|c| c.is_numeric()) {
                 let val = ops.parse::<Value>();
-                match val {
+                return match val {
                     Ok(v) => {
                         self.stack.push(v);
                         Ok(())
                     }
                     _ => Err(InvalidWord),
                 }
-            } else {
-                match input {
-                    "+" | "-" | "*" | "/" | "SWAP" => {
-                        let a_opt = self.stack.pop();
-                        let b_opt = self.stack.pop();
-                        if a_opt.is_some() && b_opt.is_some() {
-                            let a = a_opt.unwrap();
-                            let b = b_opt.unwrap();
+            }
 
-                            match input {
-                                "+" => self.stack.push(a + b),
-                                "-" => self.stack.push(a - b),
-                                "*" => self.stack.push(a * b),
-                                "/" => self.stack.push(a / b),
-                                _ => {
-                                    self.stack.push(b);
-                                    self.stack.push(a);
-                                }
-                            };
-                            Ok(())
-                        } else {
-                            Err(InvalidWord)
-                        }
+            match ops.to_lowercase().as_str() {
+                "+" | "-" | "*" | "/" | "swap" => {
+                    let a_opt = self.stack.pop();
+                    let b_opt = self.stack.pop();
+                    if a_opt.is_none() || b_opt.is_none() {
+                        return Err(StackUnderflow);
                     }
-                    "DUP" => {
-                        let val = self.stack.pop();
-                        match val {
-                            Some(v) => {
-                                self.stack.push(v * 2);
-                                Ok(())
+
+                    let a = a_opt.unwrap();
+                    let b = b_opt.unwrap();
+
+                    match ops {
+                        "+" => self.stack.push(a + b),
+                        "-" => self.stack.push(b - a),
+                        "*" => self.stack.push(a * b),
+                        "/" => {
+                            if a == 0 {
+                                return Err(DivisionByZero);
                             }
-                            _ => Err(InvalidWord),
+                            self.stack.push(b / a);
                         }
-                    }
-                    "DROP" => {
-                        self.stack.pop();
-                        Ok(())
-                    }
-                    "OVER" => {
-                        if self.stack.len() < 2 {
-                            return Err(InvalidWord);
+                        _ => {
+                            self.stack.push(a);
+                            self.stack.push(b);
                         }
-                        let one_to_last = self.stack[self.stack.len() - 2];
-                        self.stack.push(one_to_last);
-                        Ok(())
-                    }
-                    _ => Err(UnknownWord),
+                    };
+                    Ok(())
                 }
+                "dup" => {
+                    if self.stack.len() < 1 {
+                        return Err(StackUnderflow);
+                    }
+                    let val = self.stack[self.stack.len() - 1];
+                    self.stack.push(val);
+                    Ok(())
+                }
+                "drop" => {
+                    if self.stack.len() < 1 {
+                        return Err(StackUnderflow);
+                    }
+                    self.stack.pop();
+                    Ok(())
+                }
+                "over" => {
+                    if self.stack.len() < 2 {
+                        return Err(StackUnderflow);
+                    }
+                    let one_to_last = self.stack[self.stack.len() - 2];
+                    self.stack.push(one_to_last);
+                    Ok(())
+                }
+                _ => Err(UnknownWord),
             }
         });
 
